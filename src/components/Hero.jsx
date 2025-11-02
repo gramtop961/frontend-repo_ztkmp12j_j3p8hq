@@ -6,7 +6,7 @@ export default function Hero() {
     <section className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden rounded-3xl">
       <div className="absolute inset-0">
         <Spline
-          scene="https://prod.spline.design/QrI46EbSvyxcmozb/scene.splinecode"
+          scene="https://prod.spline.design/4JFCLsE5jz72cZzw/scene.splinecode"
           style={{ width: '100%', height: '100%' }}
         />
       </div>
@@ -30,12 +30,12 @@ export default function Hero() {
             blazing-fast streaming with a sleek, glassy interface.
           </p>
           <div className="mt-6 flex items-center justify-center gap-3">
-            <button className="inline-flex items-center gap-2 bg-[#1DB954] text-black font-semibold px-5 py-3 rounded-full shadow hover:brightness-110 transition">
+            <a href="#discover" className="inline-flex items-center gap-2 bg-[#1DB954] text-black font-semibold px-5 py-3 rounded-full shadow hover:brightness-110 transition">
               <Play className="w-5 h-5" /> Explore Music
-            </button>
-            <button className="inline-flex items-center gap-2 bg-white/10 text-white border border-white/10 px-5 py-3 rounded-full hover:bg-white/15 transition">
+            </a>
+            <a href="#" className="inline-flex items-center gap-2 bg-white/10 text-white border border-white/10 px-5 py-3 rounded-full hover:bg-white/15 transition">
               Learn More
-            </button>
+            </a>
           </div>
         </div>
       </div>
