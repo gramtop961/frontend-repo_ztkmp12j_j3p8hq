@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Hero from './components/Hero';
-import SearchBar from './components/SearchBar';
 import FeaturedGrid from './components/FeaturedGrid';
 import Player from './components/Player';
+import SearchResults from './components/SearchResults';
+import AuthModal from './components/AuthModal';
+import { User } from 'lucide-react';
 
 function App() {
-  // Sample tracks (royalty-free demos)
-  const tracks = useMemo(
+  // Demo tracks used as default queue
+  const defaultTracks = useMemo(
     () => [
       {
         id: 't1',
@@ -37,21 +39,32 @@ function App() {
   );
 
   const audioRef = useRef(new Audio());
+  const [queue, setQueue] = useState(defaultTracks);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [token, setToken] = useState(null);
 
-  // Load track when index changes
+  // Load persisted token
+  useEffect(() => {
+    const t = localStorage.getItem('bw_token');
+    if (t) setToken(t);
+  }, []);
+
+  // Load track when index or queue changes
   useEffect(() => {
     const audio = audioRef.current;
-    audio.src = tracks[currentIndex].url;
+    const track = queue[currentIndex];
+    if (!track) return;
+    audio.src = track.url;
     audio.load();
     if (isPlaying) {
       audio.play().catch(() => {});
     }
-  }, [currentIndex, isPlaying, tracks]);
+  }, [currentIndex, isPlaying, queue]);
 
   // Attach audio listeners once
   useEffect(() => {
@@ -81,10 +94,17 @@ function App() {
   const playAtIndex = (index) => {
     setCurrentIndex(index);
     setIsPlaying(true);
-    // play will trigger after src load effect
     setTimeout(() => {
       audioRef.current.play().catch(() => {});
     }, 0);
+  };
+
+  const setQueueAndPlay = (tracks, startIndex = 0) => {
+    if (!tracks?.length) return;
+    setQueue(tracks);
+    setCurrentIndex(Math.min(startIndex, tracks.length - 1));
+    setIsPlaying(true);
+    setTimeout(() => audioRef.current.play().catch(() => {}), 0);
   };
 
   const togglePlay = () => {
@@ -99,12 +119,12 @@ function App() {
   };
 
   const next = () => {
-    setCurrentIndex((i) => (i + 1) % tracks.length);
+    setCurrentIndex((i) => (i + 1) % queue.length);
     setIsPlaying(true);
   };
 
   const prev = () => {
-    setCurrentIndex((i) => (i - 1 + tracks.length) % tracks.length);
+    setCurrentIndex((i) => (i - 1 + queue.length) % queue.length);
     setIsPlaying(true);
   };
 
@@ -113,17 +133,33 @@ function App() {
     setCurrentTime(time);
   };
 
+  const logout = () => {
+    localStorage.removeItem('bw_token');
+    setToken(null);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="max-w-6xl mx-auto px-4 py-6 md:py-10 space-y-10">
+        {/* Top bar with auth */}
+        <div className="flex items-center justify-end">
+          {token ? (
+            <button onClick={logout} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/15">
+              <User className="w-4 h-4 text-[#1DB954]" /> Logout
+            </button>
+          ) : (
+            <button onClick={() => setAuthOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1DB954] text-black font-semibold">
+              <User className="w-4 h-4" /> Sign up / Log in
+            </button>
+          )}
+        </div>
+
         <Hero />
 
-        <section className="mt-6 md:mt-10">
-          <SearchBar />
-        </section>
+        <SearchResults onPlayList={setQueueAndPlay} />
 
         <FeaturedGrid
-          tracks={tracks}
+          tracks={queue}
           currentIndex={currentIndex}
           isPlaying={isPlaying}
           onPlayIndex={playAtIndex}
@@ -147,7 +183,7 @@ function App() {
 
       <div className="px-4">
         <Player
-          track={tracks[currentIndex]}
+          track={queue[currentIndex]}
           isPlaying={isPlaying}
           onTogglePlay={togglePlay}
           onNext={next}
@@ -168,6 +204,12 @@ function App() {
           </a>
         </div>
       </footer>
+
+      <AuthModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onAuthed={({ token: t }) => setToken(t)}
+      />
     </div>
   );
 }
